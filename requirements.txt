@@ -1,0 +1,9 @@
+pystan
+numpy
+pandas
+matplotlib
+scipy
+textract
+arviz
+tqdm
+seaborn
