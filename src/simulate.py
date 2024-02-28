@@ -64,7 +64,7 @@ class RandomAgent:
 
 if __name__ in "__main__":
 
-    path = Path(__file__).parent
+    path = Path(__file__).parents[1]
 
     data_path = path / "data"
     data_path.mkdir(exist_ok=True)
@@ -75,7 +75,6 @@ if __name__ in "__main__":
         seeker_inv_temp = np.random.uniform(0.1, 3)
         seeker_learning_rate = np.random.uniform(0.1, 0.7)
         n_trials = 100
-
 
 
         seeker = RescorlaWagnerAgent(0.1, 0.5, 0.5)

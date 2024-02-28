@@ -9,23 +9,25 @@ import stan
 
 
 if __name__ in "__main__":
-    path = Path(__file__).parent
-
-
-
+    path = Path(__file__).parents[1]
     model_path = path / "model.stan"
+    outpath = path / "fits"
+    
+    if not outpath.exists():
+        outpath.mkdir()
 
     with open(model_path, "r") as f:
         model_spec = f.read()
-
 
     for simulation in (path / "data").iterdir():   
         data = pd.read_csv(simulation)
 
         data_dict = {
-            "N" : len(data),
-            "outcomes" : data["reward"].values,
-            "choices" : data["seeker_choice"].values
+            "T" : int(len(data)),
+            "outcomes" : data["reward"].astype("int").values,
+            "choices" : data["seeker_choice"].astype("int").values,
+            "prior_sd_lr": 0.5,
+            "prior_sd_tau": 0.5,
         }
 
         # fit model
@@ -39,7 +41,7 @@ if __name__ in "__main__":
         # get the estimated parameters
         df = fit.to_frame()
 
-        print(df.head())  
+        df.to_csv(outpath / f"{simulation.stem}_fit.csv", index = False)
 
 
         
