@@ -30,8 +30,8 @@ transformed parameters {
 
 model {
     // set priors
-    target += normal_lpdf(lr | 0, prior_sd_lr);
-    target += normal_lpdf(tau | 0, prior_sd_tau);
+    loglr ~ normal(0, prior_sd_lr);
+    exptau ~ normal(0, prior_sd_tau);
 
     real value;
     value = initV;
@@ -51,21 +51,28 @@ model {
         // value update
         value = value + lr * PE;
 
-        // calculating the probability of the choice
-        p = inv_logit(value/tau);
-
         // adding the log likelihood
-        target += bernoulli_lpmf(choices[t] | p);
+        choices[t] ~ bernoulli(inv_logit(value/tau));
 
     }
 }
 
 
 generated quantities {
-
+    real <lower=0, upper=1> prior_lr;
+    real  <lower=0> prior_tau;
+    
+    real <lower=0, upper=1> posterior_lr;
+    real  <lower=0> posterior_tau;
+    
     // generate priors
-    real prior_lr = normal_rng(0, prior_sd_lr);
-    real prior_tau = normal_rng(0, prior_sd_tau);
+    prior_lr = inv_logit(normal_rng(0, prior_sd_lr));
+    prior_tau = exp(normal_rng(0, prior_sd_tau));
+
+    // generate posteriors
+    posterior_lr = inv_logit(loglr);
+    posterior_tau = exp(exptau);
+
 
 
     // for posterior predictive checks (choices)
