@@ -25,6 +25,22 @@ def softmax(x, theta):
     exp_x = np.exp(x*theta)
     return exp_x / np.sum(exp_x)
 
+def inv_logit(x):
+    """
+    Inverse logit function.
+
+    Parameters
+    ----------
+    x : float
+        Value.
+    
+    Returns
+    -------
+    inv_logit : float
+        Inverse logit of x.
+    """
+    return 1 / (1 + np.exp(-x))
+
 
 class RescorlaWagnerAgent:
     def __init__(self, learning_rate, inverse_temperature, initial_value = 0.5):
@@ -36,11 +52,11 @@ class RescorlaWagnerAgent:
         if choice == 1:
             self.value = self.value + self.alpha * (reward - self.value)
         else:
-            self.value = self.value + self.alpha * (1 - reward - self.value)
+            self.value = self.value - self.alpha * (reward - (1-self.value))
 
     def choose_action(self):
-        p_right = softmax(np.array([self.value, 1-self.value]), self.inv_temp)[0]
-        
+        p_right = inv_logit(-self.inv_temp * (self.value - (1 - self.value)));
+
         if np.random.uniform() < p_right:
             return 1
         else:
@@ -56,11 +72,7 @@ class RandomAgent:
             return 1
         else:
             return 0
-    
-        seeker_inv_temp  = 0.5
-        seeker_learning_rate = 0.1
-        n_trials = 100
-        hider_bias = 0.7
+
 
 if __name__ in "__main__":
 
@@ -69,20 +81,16 @@ if __name__ in "__main__":
     data_path = path / "data"
     data_path.mkdir(exist_ok=True)
 
-    for sim in range(3):
-
+    for sim in range(100):
         # generate random values
         seeker_inv_temp = np.random.uniform(0.1, 3)
-        seeker_learning_rate = np.random.uniform(0.1, 0.7)
-        n_trials = 1000
+        seeker_learning_rate = np.random.uniform(0, 1)
+        n_trials = 120
 
-
-        seeker = RescorlaWagnerAgent(0.1, 0.5, 0.5)
-        hider = RandomAgent(0.5)
+        seeker = RescorlaWagnerAgent(seeker_learning_rate, seeker_inv_temp)
+        hider = RandomAgent(0.8)
 
         df = pd.DataFrame(columns=["seeker_choice", "hider_choice", "reward", "seeker_value"])
-
-        # types of columns: int, int, int, float
         
         for t in range(n_trials):
             seeker_action = seeker.choose_action()
@@ -96,8 +104,8 @@ if __name__ in "__main__":
 
             df.loc[t] = [seeker_action, hider_action, reward, seeker.value]
 
-        df["learning_rate"] = seeker_learning_rate
-        df["inverse_temperature"] = seeker_inv_temp
+        df["learning_rate"] = seeker.alpha
+        df["inverse_temperature"] = seeker.inv_temp
         df["trial"] = np.arange(n_trials)
         df["n_trials"] = n_trials
 

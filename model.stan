@@ -10,12 +10,6 @@ data {
 
 }
 
-transformed data {
-    real<lower=0, upper=1> initV;
-    initV = 0.5;
-}
-
-
 parameters {
     real loglr;
     real exptau;
@@ -34,26 +28,28 @@ model {
     exptau ~ normal(0, prior_sd_tau);
 
     real value;
-    value = initV;
-    real PE;
+    value = 0.5;
     real p;
+    real diff;
+    
+    array[2] real utils;
 
-    for(t in 2:T){
+    for(t in 1:T-1){
 
-        // calculating the prediction error
-        if (choices[t-1] == 0) {
-            PE = 1 - outcomes[t-1] - value;
+        // make a prediction
+        utils = {value, 1 - value};
 
+        // softmax
+        p = inv_logit(-tau * (value - (1 - value)));
+
+        choices[t] ~ bernoulli(p);
+
+        // update value
+        if (choices[t] == 1){
+            value = value + lr * (outcomes[t] - value);
         } else {
-            PE = outcomes[t-1] - value;
+            value = value - lr * (outcomes[t] - (1 - value));
         }
-
-        // value update
-        value = value + lr * PE;
-
-        // adding the log likelihood
-        choices[t] ~ bernoulli(inv_logit(value/tau));
-
     }
 }
 
@@ -73,33 +69,28 @@ generated quantities {
     posterior_lr = inv_logit(loglr);
     posterior_tau = exp(exptau);
 
-
-
     // for posterior predictive checks (choices)
-    array[T] real ppc_choices;
-
-    real value;
-    value = initV;
-    real PE;
+    array[T] int<lower=0, upper=1> pred_choice;
+    array[T+1] real<lower=0, upper=1> value;
+    array[2] real utils;
     real p;
 
-    for(t in 2:T){
+    // set initial values
+    value[1] = 0.5;
 
-        // calculating the prediction error
-        if (choices[t-1] == 0) {
-            PE = 1 - outcomes[t-1] - value;
+    // predict choice for remaining trials
+    for (t in 1:T){
+        utils = {value[t], 1 - value[t]};
 
+        // softmax
+        p = inv_logit(-tau * (value[t] - (1 - value[t])));
+        pred_choice[t] = bernoulli_rng(p);
+
+        // update value
+        if (choices[t] == 1){ // ASK RICCARDO IF WE WANT TO USE THE PREDICTED CHOICE i think not but make sure and talk about what the intuition is
+            value[t+1] = value[t] + lr * (outcomes[t] - value[t]);
         } else {
-            PE = outcomes[t-1] - value;
+            value[t+1] = value[t] - lr * (outcomes[t] - (1 - value[t]));        
         }
-
-        // value update
-        value = value + lr * PE;
-
-        // calculating the probability of the choice
-        p = inv_logit(value/tau);
-
-        // adding the log likelihood
-        ppc_choices[t] = bernoulli_rng(p);
-    }
+    }    
 }

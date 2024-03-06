@@ -26,8 +26,8 @@ if __name__ in "__main__":
             "T" : int(len(data)),
             "outcomes" : data["reward"].astype("int").values,
             "choices" : data["seeker_choice"].astype("int").values,
-            "prior_sd_lr": 1,
-            "prior_sd_tau": 0.5,
+            "prior_sd_lr": 1.5,
+            "prior_sd_tau": 1,
         }
 
         # fit model
