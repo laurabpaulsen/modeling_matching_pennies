@@ -1,13 +1,11 @@
 data {
     int<lower=1> T; // number of trials
-
     array[T] int choices;
     array[T] int outcomes;
 
     // for priors
     real prior_sd_lr;
     real prior_sd_tau;
-
 }
 
 parameters {
@@ -35,12 +33,8 @@ model {
     array[2] real utils;
 
     for(t in 1:T-1){
-
-        // make a prediction
-        utils = {value, 1 - value};
-
         // softmax
-        p = inv_logit(-tau * (value - (1 - value)));
+        p = 1 / (1 + exp(-tau * (value - 0.5))); // minus 0.5 to center around 0.5 (equal value for each hand) 
 
         choices[t] ~ bernoulli(p);
 
@@ -83,7 +77,7 @@ generated quantities {
         utils = {value[t], 1 - value[t]};
 
         // softmax
-        p = inv_logit(-tau * (value[t] - (1 - value[t])));
+        p = 1 / (1 + exp(-tau * (value[t] - 0.5))); 
         pred_choice[t] = bernoulli_rng(p);
 
         // update value

@@ -162,3 +162,5 @@ cython_debug/
 fits/*
 
 plots/checks/*
+
+data/*

@@ -6,14 +6,15 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-def softmax(x, theta):
+
+def softmax_binary(x, theta):
     """
     Softmax function.
 
     Parameters
     ----------
     x : numpy.ndarray
-        Array of values.
+        Value
     theta : float
         Inverse temperature parameter.
     
@@ -22,24 +23,9 @@ def softmax(x, theta):
     softmax : numpy.ndarray
         Softmaxed values.
     """
-    exp_x = np.exp(x*theta)
-    return exp_x / np.sum(exp_x)
 
-def inv_logit(x):
-    """
-    Inverse logit function.
+    return 1 / (1 + np.exp(-theta*x))
 
-    Parameters
-    ----------
-    x : float
-        Value.
-    
-    Returns
-    -------
-    inv_logit : float
-        Inverse logit of x.
-    """
-    return 1 / (1 + np.exp(-x))
 
 
 class RescorlaWagnerAgent:
@@ -55,7 +41,7 @@ class RescorlaWagnerAgent:
             self.value = self.value - self.alpha * (reward - (1-self.value))
 
     def choose_action(self):
-        p_right = inv_logit(-self.inv_temp * (self.value - (1 - self.value)));
+        p_right = softmax_binary(self.value - 0.5, self.inv_temp)
 
         if np.random.uniform() < p_right:
             return 1
@@ -81,9 +67,9 @@ if __name__ in "__main__":
     data_path = path / "data"
     data_path.mkdir(exist_ok=True)
 
-    for sim in range(100):
+    for sim in range(50):
         # generate random values
-        seeker_inv_temp = np.random.uniform(0.1, 3)
+        seeker_inv_temp = np.random.uniform(0.4, 3)
         seeker_learning_rate = np.random.uniform(0, 1)
         n_trials = 120
 

@@ -14,7 +14,7 @@ if __name__ in "__main__":
     outpath = path / "fits"
     
     if not outpath.exists():
-        outpath.mkdir()
+        outpath.mkdir(parents = True)
 
     with open(model_path, "r") as f:
         model_spec = f.read()
