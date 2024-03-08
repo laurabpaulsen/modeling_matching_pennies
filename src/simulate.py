@@ -67,14 +67,14 @@ if __name__ in "__main__":
     data_path = path / "data"
     data_path.mkdir(exist_ok=True)
 
-    for sim in range(50):
+    for sim in range(100):
         # generate random values
-        seeker_inv_temp = np.random.uniform(0.4, 3)
+        seeker_inv_temp = np.random.uniform(0.5, 2)
         seeker_learning_rate = np.random.uniform(0, 1)
         n_trials = 120
 
         seeker = RescorlaWagnerAgent(seeker_learning_rate, seeker_inv_temp)
-        hider = RandomAgent(0.8)
+        hider = RandomAgent(0.75)
 
         df = pd.DataFrame(columns=["seeker_choice", "hider_choice", "reward", "seeker_value"])
         
